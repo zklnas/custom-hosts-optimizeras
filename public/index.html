@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>优选自定义host - 智能 IP 优选 | 自定义域名加速工具</title>
+
+  <meta name="description" content="优选自定义host 是一个智能 IP 优选工具，使用 Cloudflare Workers 和公共 DNS API 来加速访问自定义域名，支持自定义域名管理和智能优选。">
+  <meta name="keywords" content="自定义域名加速,IP优选,Hosts工具,DNS优化,Cloudflare Workers,域名加速">
+  <meta name="author" content="Yan-nian">
+  <link rel="canonical" href="#" />
+
+  <meta property="og:title" content="优选自定义host - 智能 IP 优选 | 自定义域名加速工具">
+  <meta property="og:description" content="使用 Cloudflare Workers 和公共 DNS API 来智能优选域名 IP，支持自定义域名管理，每小时自动更新，永久免费。">
+  <meta property="og:image" content="/og.svg">
+  <meta property="og:url" content="#">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="优选自定义host">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="优选自定义host - 智能 IP 优选">
+  <meta name="twitter:description" content="使用 Cloudflare Workers 和公共 DNS API 来智能优选域名 IP，支持自定义域名管理。">
+  <meta name="twitter:image" content="/og.svg">
+
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="icon" type="image/ico" href="/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="apple-touch-icon" href="/logo.svg">
+  <link rel="preconnect" href="https://github.com">
+  <link rel="stylesheet" href="/index.css?v=2.0">
+</head>
+
+<body>
+  <div class="header">
+    <div class="logo-container">
+      <img src="/logo.svg" alt="优选自定义host" class="logo" />
+    </div>
+    <h1>优选自定义host</h1>
+    <p>使用 Cloudflare Workers 和公共 DNS API 智能优选域名 IP</p>
+    <div id="status-indicator" style="margin-top: 10px; padding: 8px 16px; background: #e8f5e8; color: #2d5a2d; border-radius: 8px; display: inline-block; font-size: 14px;">
+      🟢 服务正常运行
+    </div>
+  </div>
+
+  <!-- 主功能选项卡 -->
+  <div class="tabs">
+    <div class="tab active" data-tab="hosts">Hosts 文件</div>
+    <div class="tab" data-tab="api">API 文档</div>
+    <div class="tab" data-tab="help">使用帮助</div>
+  </div>
+
+  <!-- Hosts 文件选项卡 -->
+  <div class="tab-content active" id="hosts-tab">
+    <h2>📋 当前 Hosts 内容（已启用IP优选和自定义域名）</h2>
+    <div class="control-panel">
+      <!-- IP优选和自定义域名功能已默认启用 -->
+      <button id="refreshHosts" class="btn btn-primary" title="重新优选所有GitHub域名和自定义域名的IP">立即全域名优选</button>
+      <button id="forceRefreshDisplay" class="btn btn-secondary" title="强制刷新显示最新的hosts内容，包括后台添加的自定义域名">强制刷新显示</button>
+      <span id="hostsStatus" class="status-text">使用缓存数据，每小时自动更新</span>
+      <span id="cacheStatus" class="cache-status-text">缓存状态：加载中...</span>
+    </div>
+    
+    <div class="hosts-container">
+      <div class="hosts-header">
+        <span>Hosts 文件内容</span>
+        <button class="copy-btn" id="copyHosts">复制</button>
+      </div>
+      <pre id="hosts">正在加载 hosts 内容...</pre>
+    </div>
+
+    <h3>📥 快速使用方法</h3>
+    <div class="method-cards">
+      <div class="method-card">
+        <h4>SwitchHosts 工具</h4>
+        <p>推荐使用，可自动更新</p>
+        <ul>
+          <li>URL: <code id="switchHostsUrl">加载中...</code></li>
+          <li>更新间隔：1小时</li>
+        </ul>
+        <button class="copy-btn" data-copy="switchHostsUrl">复制 URL</button>
+      </div>
+      <div class="method-card">
+        <h4>命令行工具</h4>
+        <p>一键安装和更新</p>
+        <pre><code class="bash">curl -fsSL https://github.com/Yan-nian/custom-host/releases/download/v1.0.0/install.sh | sudo bash</code></pre>
+        <button class="copy-btn" data-copy="install-cmd">复制命令</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自定义域名选项卡已移至管理后台 -->
+
+  <!-- API 文档选项卡 -->
+  <div class="tab-content" id="api-tab">
+    <h2>🔧 API 接口文档</h2>
+    <div class="api-section">
+      <h3>基础接口</h3>
+      <table class="api-table">
+        <tr>
+          <th>接口</th>
+          <th>方法</th>
+          <th>参数</th>
+          <th>描述</th>
+        </tr>
+        <tr>
+          <td>/hosts</td>
+          <td><span class="method get">GET</span></td>
+          <td>refresh=[true|false], custom=[true|false]</td>
+          <td>获取 hosts 文件内容，支持强制刷新缓存</td>
+        </tr>
+        <tr>
+          <td>/hosts.json</td>
+          <td><span class="method get">GET</span></td>
+          <td>refresh=[true|false]</td>
+          <td>获取 JSON 格式的域名数据，包含统计信息</td>
+        </tr>
+        <tr>
+          <td>/{domain}</td>
+          <td><span class="method get">GET</span></td>
+          <td>-</td>
+          <td>获取指定域名的实时 DNS 解析结果</td>
+        </tr>
+      </table>
+
+      <h3>管理接口</h3>
+      <table class="api-table">
+        <tr>
+          <th>接口</th>
+          <th>方法</th>
+          <th>描述</th>
+        </tr>
+        <tr>
+          <td>/api/custom-domains</td>
+          <td><span class="method get">GET</span></td>
+          <td>获取自定义域名列表</td>
+        </tr>
+        <tr>
+          <td>/api/custom-domains</td>
+          <td><span class="method post">POST</span></td>
+          <td>添加自定义域名，需要提供domain字段，可选description字段</td>
+        </tr>
+        <tr>
+          <td>/api/custom-domains/batch</td>
+          <td><span class="method post">POST</span></td>
+          <td>批量添加自定义域名，需要提供domains数组，每个元素包含domain字段</td>
+        </tr>
+        <tr>
+          <td>/api/custom-domains/{domain}</td>
+          <td><span class="method delete">DELETE</span></td>
+          <td>删除指定的自定义域名</td>
+        </tr>
+        <tr>
+          <td>/api/custom-domains</td>
+          <td><span class="method delete">DELETE</span></td>
+          <td>清空所有自定义域名</td>
+        </tr>
+        <tr>
+          <td>/api/optimize/{domain}</td>
+          <td><span class="method post">POST</span></td>
+          <td>优选指定域名的 IP 地址</td>
+        </tr>
+        <tr>
+          <td>/api/optimize-all</td>
+          <td><span class="method post">POST</span></td>
+          <td>优选所有自定义域名的 IP 地址（需要 API Key 或管理后台访问）</td>
+        </tr>
+        <tr>
+          <td>/api/cache/status</td>
+          <td><span class="method get">GET</span></td>
+          <td>查看缓存状态和统计信息</td>
+        </tr>
+        <tr>
+          <td>/api/cache/refresh</td>
+          <td><span class="method post">POST</span></td>
+          <td>手动刷新 GitHub 域名缓存（需要 API Key 或管理后台访问）</td>
+        </tr>
+        <tr>
+          <td>/api/cache</td>
+          <td><span class="method delete">DELETE</span></td>
+          <td>清空所有缓存数据（需要 API Key 或管理后台访问）</td>
+        </tr>
+        <tr>
+          <td>/api/reset</td>
+          <td><span class="method post">POST</span></td>
+          <td>清空缓存并重新获取GitHub域名数据</td>
+        </tr>
+      </table>
+
+      <h3>系统配置接口</h3>
+      <table class="api-table">
+        <tr>
+          <th>接口</th>
+          <th>方法</th>
+          <th>描述</th>
+        </tr>
+        <tr>
+          <td>/api/system/config</td>
+          <td><span class="method get">GET</span></td>
+          <td>获取系统配置信息（需要管理后台访问）</td>
+        </tr>
+        <tr>
+          <td>/api/system/api-key</td>
+          <td><span class="method put">PUT</span></td>
+          <td>更新 API Key（需要管理后台访问）</td>
+        </tr>
+
+      </table>
+
+      <h3>调试接口</h3>
+      <table class="api-table">
+        <tr>
+          <th>接口</th>
+          <th>方法</th>
+          <th>描述</th>
+        </tr>
+        <tr>
+          <td>/test-custom-domains</td>
+          <td><span class="method get">GET</span></td>
+          <td>测试所有自定义域名的解析状态</td>
+        </tr>
+        <tr>
+          <td>/debug</td>
+          <td><span class="method get">GET</span></td>
+          <td>获取系统调试信息和域名统计</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 使用帮助选项卡 -->
+  <div class="tab-content" id="help-tab">
+    <h2>� 使用帮助</h2>
+    
+    <h3>💻 命令行工具</h3>
+    <h4>MacOS 用户</h4>
+    <pre><code class="language-bash">sudo curl -fsSL https://github.com/Yan-nian/custom-host/releases/download/v1.0.0/custom-hosts.darwin-arm64 -o custom-hosts && sudo chmod +x ./custom-hosts && ./custom-hosts</code></pre>
+
+    <h4>Windows 用户</h4>
+    <p>在管理员权限的 PowerShell 中执行：</p>
+    <pre><code class="language-powershell">irm https://github.com/Yan-nian/custom-host/releases/download/v1.0.0/custom-hosts.windows-amd64.exe | iex</code></pre>
+
+    <h4>Linux 用户</h4>
+    <pre><code class="language-bash">sudo curl -fsSL https://github.com/Yan-nian/custom-host/releases/download/v1.0.0/custom-hosts.linux-amd64 -o custom-hosts && sudo chmod +x ./custom-hosts && ./custom-hosts</code></pre>
+
+    <h3>🛠️ 手动更新</h3>
+    <ol>
+      <li>获取 hosts 内容并复制</li>
+      <li>编辑本地 hosts 文件：
+        <ul>
+          <li>Windows：<code>C:\Windows\System32\drivers\etc\hosts</code></li>
+          <li>MacOS/Linux：<code>/etc/hosts</code></li>
+        </ul>
+      </li>
+      <li>粘贴内容并保存</li>
+      <li>刷新 DNS 缓存：
+        <ul>
+          <li>Windows：<code>ipconfig /flushdns</code></li>
+          <li>MacOS：<code>sudo killall -HUP mDNSResponder</code></li>
+          <li>Linux：<code>sudo systemd-resolve --flush-caches</code></li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>❓ 常见问题</h3>
+    <h4>权限问题</h4>
+    <ul>
+      <li>Windows：需要以管理员身份运行</li>
+      <li>MacOS/Linux：需要 sudo 权限</li>
+    </ul>
+
+    <h4>IP 优选说明</h4>
+    <ul>
+      <li>启用后会测试多个 IP 的响应时间</li>
+      <li>选择响应最快的 IP 地址</li>
+      <li>处理时间可能较长，请耐心等待</li>
+      <li>主页的"立即优选刷新"会对所有自定义域名执行优选</li>
+    </ul>
+
+    <h4>自定义域名功能</h4>
+    <ul>
+      <li>支持任意域名的 IP 优选</li>
+      <li>会自动包含在 hosts 文件中</li>
+      <li>立即优选刷新会对所有自定义域名进行优选</li>
+      <li>优选过程会显示详细的成功/失败统计</li>
+    </ul>
+
+    <h4>API 使用示例</h4>
+    <ul>
+      <li>获取完整hosts文件：<code>GET /hosts</code></li>
+      <li>强制刷新缓存：<code>GET /hosts?refresh=true</code></li>
+      <li>仅获取GitHub域名：<code>GET /hosts?custom=false</code></li>
+      <li>获取JSON格式数据：<code>GET /hosts.json</code></li>
+      <li>查看缓存状态：<code>GET /api/cache/status</code></li>
+      <li>查看域名统计：<code>GET /hosts.json</code></li>
+    </ul>
+    
+    <h4>管理 API（需要验证）</h4>
+    <p><strong>注意：</strong>管理类 API 需要通过管理后台访问，或使用 API Key 验证。管理后台地址在部署时配置。</p>
+    <ul>
+      <li>优选所有域名：<code>curl -X POST -H "x-api-key: YOUR_API_KEY" /api/optimize-all</code></li>
+      <li>手动刷新缓存：<code>curl -X POST -H "x-api-key: YOUR_API_KEY" /api/cache/refresh</code></li>
+      <li>添加自定义域名：<code>POST /api/custom-domains</code>（需要管理后台）</li>
+      <li>批量添加域名：<code>POST /api/custom-domains/batch</code>（需要管理后台）</li>
+    </ul>
+    
+    <h4>主页刷新专用 API Key</h4>
+    <p><strong>特殊功能：</strong>主页刷新按钮使用限制权限的特殊 API Key。</p>
+    <ul>
+      <li>Key值：<code>main-page-refresh</code></li>
+      <li>权限：仅允许访问优选和缓存刷新功能</li>
+      <li>优势：主页功能正常使用，但不能执行敏感管理操作</li>
+      <li>安全：即使Key泄露，也无法进行域名管理等危险操作</li>
+    </ul>
+  </div>
+
+  <footer style="margin-top: 50px; text-align: center; color: #666;">
+    <p>Made with ❤️ by <a href="https://github.com/Yan-nian">Yan-nian</a></p>
+    <p>感谢 <a href="https://github.com/TinsFox/github-hosts">TinsFox/github-hosts</a> 和 <a href="https://github.com/521xueweihan/GitHub520">GitHub520</a> 提供的灵感</p>
+  </footer>
+
+  <script src="/index.js?v=2.0"></script>
+</body>
+
+</html>

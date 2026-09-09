@@ -1,0 +1,34 @@
+{
+  "name": "custom-hosts-optimizeras",
+  "version": "1.3.0",
+  "description": "自定义域名访问加速，智能 IP 优选解决访问慢的问题",
+  "keywords": [
+    "hosts",
+    "dns",
+    "cloudflare-workers",
+    "ip-optimization",
+    "github-hosts",
+    "custom-domains"
+  ],
+  "homepage": "https://github.com/Yan-nian/custom-host",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Yan-nian/custom-host.git"
+  },
+  "author": "Yan-nian",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify"
+  },
+  "dependencies": {
+    "hono": "^4.6.7"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250620.0",
+    "wrangler": "^4.21.0"
+  }
+}

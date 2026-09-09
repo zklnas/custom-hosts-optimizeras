@@ -1,0 +1,48 @@
+# 配置示例文件
+# 请将此文件重命名为 wrangler.toml 并填入您的实际配置
+
+name = "custom-hosts-optimizer"
+main = "src/index.ts"
+compatibility_date = "2024-10-28"
+compatibility_flags = ["nodejs_compat"]
+assets = { directory = "public" }
+
+# 环境变量配置
+# 生产环境请使用 wrangler secret 命令设置
+[vars]
+# 可选：API Key，用于管理功能
+# API_KEY = "your-secure-api-key"
+# 可选：是否启用优化功能
+# ENABLE_OPTIMIZATION = "false"
+# 管理后台默认用户名
+ADMIN_USERNAME = "admin"
+# 管理后台密码（推荐使用 wrangler secret put ADMIN_PASSWORD 设置）
+# ADMIN_PASSWORD = "your-admin-password"
+
+# KV 数据库绑定
+# 请替换为您自己的 KV 命名空间 ID
+# 运行以下命令创建 KV 命名空间：
+# npx wrangler kv:namespace create "custom_hosts"
+# npx wrangler kv:namespace create "custom_hosts" --preview
+[[kv_namespaces]]
+binding = "custom_hosts"
+id = "YOUR_KV_NAMESPACE_ID"  # 替换为你的实际 KV 命名空间 ID
+preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"  # 替换为预览环境的 KV ID
+
+# 监控配置
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+# 定时任务配置 - 每60分钟执行一次域名优选
+[triggers]
+crons = ["0 */1 * * *"]
+
+# 多环境配置示例
+# [env.staging]
+# name = "custom-hosts-staging"
+# vars = { ENABLE_OPTIMIZATION = "true" }
+
+# [env.production] 
+# name = "custom-hosts-production"
+# vars = { ENABLE_OPTIMIZATION = "false" }
